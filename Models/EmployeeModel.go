@@ -6,11 +6,10 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type Repository interface {
-	Close()
+type Repositoryinterface interface {
 	Getemployees(c *gin.Context) []Employee
 	GetemployeeById(c *gin.Context) []Employee
-	CreateEmployeeRecordApi(c *gin.Context)
+	CreateEmployeeRecordApi(c *gin.Context, emp *Employee) error
 	DeleteEmployeeRecordApi(c *gin.Context)
 	UpdateEmployeeRecordApi(c *gin.Context)
 }
