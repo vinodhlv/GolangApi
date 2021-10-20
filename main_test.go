@@ -90,6 +90,7 @@ func TestCreateEmployeeRecordApi(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	c, _ := gin.CreateTestContext(w)
 	err := repo.CreateEmployeeRecordApi(c, emp)
+	fmt.Println("Error in TestCreate::::", err)
 	assert.NoError(t, err)
 
 }
