@@ -2,16 +2,14 @@ package Models
 
 import (
 	"time"
-
-	"github.com/gin-gonic/gin"
 )
 
 type Repositoryinterface interface {
-	Getemployees(c *gin.Context) []Employee
-	GetemployeeById(c *gin.Context) []Employee
-	CreateEmployeeRecordApi(c *gin.Context, emp *Employee) error
-	DeleteEmployeeRecordApi(c *gin.Context)
-	UpdateEmployeeRecordApi(c *gin.Context)
+	GetEmployees() ([]Employee, error)
+	GetEmployeeById(id string) (Employee, error)
+	AddEmployee(Employee) (Employee, error)
+	DeleteEmployee(id string) error
+	UpdateEmployee(Employee) error
 }
 
 type Employee struct {

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net/http/httptest"
+	"regexp"
 	"testing"
 	"time"
 
@@ -56,7 +57,7 @@ func TestGetemployees(t *testing.T) {
 
 	defer repo.DB.Close()
 
-	query := "SELECT * FROM employee"
+	query := "SELECT (.+) FROM employee"
 
 	rows := sqlmock.NewRows([]string{"Id", "FisrtName", "MiddleName",
 		"LastName", "Gender", "Salary", "DOB", "Email", "Phone", "AddressLine1", "AddressLine2", "State", "PostCode", "TFN", "SuperBalance"}).
@@ -67,11 +68,12 @@ func TestGetemployees(t *testing.T) {
 	//	var c *gin.Context
 	w := httptest.NewRecorder()
 	gin.SetMode(gin.TestMode)
-	c, _ := gin.CreateTestContext(w)
-	employees := repo.ExecuteQueryGetEmployees(query, c)
+	gin.CreateTestContext(w)
+
+	employees, err := repo.ExecuteGetAll(query)
 	fmt.Println("in main test employees ", employees)
 	assert.NotEmpty(t, employees)
-	// assert.NotNil(t, err)
+	assert.Nil(t, err)
 
 }
 
@@ -80,17 +82,19 @@ func TestCreateEmployeeRecordApi(t *testing.T) {
 	db, mock := NewMock()
 	repo := &Models.Repository{db}
 
-	query := "INSERT INTO employee (Id,FirstName,MiddleName,LastName,Gender,Salary,DOB,Email,Phone,AddressLine1,AddressLine2,State,PostCode,TFN,SuperBalance) VALUES (?, ?,?,?,?,?,?,?,?,?,?,?,?, ?,?)"
-
-	prep := mock.ExpectPrepare(query)
-	prep.ExpectExec().WithArgs(emp.Id, emp.FirstName, emp.MiddleName, emp.LastName, emp.Gender, emp.Salary,
-		emp.DOB, emp.Email, emp.Phone, emp.AddressLine1,
-		emp.AddressLine2, emp.State, emp.PostCode, emp.TFN, emp.SuperBalance).WillReturnResult(sqlmock.NewResult(0, 1))
+	query := "INSERT INTO 'employee' (Id,FirstName,MiddleName,LastName,Gender,Salary,DOB,Email,Phone,AddressLine1,AddressLine2,State,PostCode,TFN,SuperBalance) VALUES (?, ?,?,?,?,?,?,?,?,?,?,?,?,?,?)"
+	//querpart := "INSERT INTO 'employee'"
+	//prep := mock.ExpectPrepare(query)
+	// mock.ExpectExec().WillReturnResult()
+	sql := regexp.QuoteMeta(query)
+	//sqlmock.ExpectedExec()
+	mock.MatchExpectationsInOrder(false)
+	mock.ExpectExec(sql).WithArgs(true, 1).WillReturnResult(sqlmock.NewResult(0, 1))
 	w := httptest.NewRecorder()
 	gin.SetMode(gin.TestMode)
-	c, _ := gin.CreateTestContext(w)
-	err := repo.CreateEmployeeRecordApi(c, emp)
-	fmt.Println("Error in TestCreate::::", err)
+	gin.CreateTestContext(w)
+	emp, err := repo.AddEmployee(Models.Employee{})
+	assert.NotEmpty(t, emp)
 	assert.NoError(t, err)
 
 }

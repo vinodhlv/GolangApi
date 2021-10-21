@@ -1,64 +1,67 @@
 package Controllers
 
 import (
-	"dataApi/Config"
 	"dataApi/Models"
-	"database/sql"
+	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
 
-var repoInterf Models.Repositoryinterface
-var dbcon Models.Repository
-var DB *sql.DB
+func GetAll(c *gin.Context, repo Models.Repositoryinterface) {
 
-func getRepo() *Models.Repository {
-	dbcon.DB = Config.GetDB()
-	return &dbcon
+	employees, err := repo.GetEmployees()
+	if err != nil {
+		c.JSON(http.StatusNotFound, "Error while getting records ")
+	}
+	c.JSON(http.StatusOK, employees)
 }
 
-func GetEmployeesNavigate(c *gin.Context) {
+func GetById(c *gin.Context, repo Models.Repositoryinterface) {
+	id := c.Params.ByName("id")
+	employee, err := repo.GetEmployeeById(id)
+	if err != nil {
+		c.JSON(http.StatusNotFound, "Error while getting record ")
+		//c.IndentedJSON(http.StatusOK, emp) -- this call takes more bandwidth
+	}
 
-	//dbcon.DB = Config.GetDB()
-
-	repoInterf = getRepo()
-
-	repoInterf.Getemployees(c)
+	c.JSON(http.StatusOK, employee)
 
 }
 
-func GetEmployeeByIdNavigate(c *gin.Context) {
+func Add(c *gin.Context, repo Models.Repositoryinterface) {
+	var employee Models.Employee
+	c.BindJSON(&employee)
+	emp, err := repo.AddEmployee(employee)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, "Error while inserting record ")
+	}
 
-	dbcon.DB = Config.GetDB()
-
-	repoInterf = getRepo()
-
-	repoInterf.GetemployeeById(c)
-
-	// DB := Config.GetDB()
-	// repo := &Models.Repository{DB}
-	// repo.GetemployeeById(c)
+	c.JSON(http.StatusCreated, emp)
 }
 
-func CreateEmployeeRecord(c *gin.Context) {
+func Delete(c *gin.Context, repo Models.Repositoryinterface) {
+	id := c.Params.ByName("id")
+	var emp Models.Employee
+	c.BindJSON(&emp)
+	err := repo.DeleteEmployee(id)
 
-	repoInterf = getRepo()
-
-	var emp *Models.Employee
-
-	repoInterf.CreateEmployeeRecordApi(c, emp)
+	if err != nil {
+		c.String(http.StatusInternalServerError, "Error while deleting record ")
+	} else {
+		c.JSON(http.StatusOK, gin.H{"id #" + id: "deleted"})
+	}
 }
 
-func DeleteEmployeeRecord(c *gin.Context) {
+func Save(c *gin.Context, repo Models.Repositoryinterface) {
 
-	repoInterf = getRepo()
-
-	repoInterf.DeleteEmployeeRecordApi(c)
-}
-
-func UpdateEmployeeRecord(c *gin.Context) {
-
-	repoInterf = getRepo()
-
-	repoInterf.UpdateEmployeeRecordApi(c)
+	id := c.Params.ByName("id")
+	var emp Models.Employee
+	c.BindJSON(&emp)
+	emp.Id = id
+	err := repo.UpdateEmployee(emp)
+	if err != nil {
+		c.String(http.StatusInternalServerError, "Error while updating record ")
+	} else {
+		c.JSON(http.StatusOK, gin.H{"id #" + id: "updated"})
+	}
 }

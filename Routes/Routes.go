@@ -1,22 +1,28 @@
 package Routes
 
 import (
+	"dataApi/Config"
 	"dataApi/Controllers"
+	"dataApi/Models"
 
 	"github.com/gin-gonic/gin"
 )
 
 func SetUpRouter() *gin.Engine {
-	route := gin.Default()
+	var repoInterf Models.Repositoryinterface
+	var dbcon Models.Repository
 
-	group1 := route.Group("/employeeApi")
-	{
-		group1.GET("Getemployees", Controllers.GetEmployeesNavigate)
-		group1.POST("Insertemployee", Controllers.CreateEmployeeRecord)
-		group1.DELETE("Deleteemployee/:id", Controllers.DeleteEmployeeRecord)
-		group1.PUT("Updateemployee/:id", Controllers.UpdateEmployeeRecord)
-		group1.GET("Getemployee/:id", Controllers.GetEmployeeByIdNavigate)
-	}
+	DB := Config.GetDB()
+
+	dbcon = Models.Repository{DB}
+	repoInterf = &dbcon
+
+	route := gin.Default()
+	route.GET("/employee/:id", func(c *gin.Context) { Controllers.GetById(c, repoInterf) })
+	route.GET("/employees", func(c *gin.Context) { Controllers.GetAll(c, repoInterf) })
+	route.POST("/employee", func(c *gin.Context) { Controllers.Add(c, repoInterf) })
+	route.DELETE("/employee/:id", func(c *gin.Context) { Controllers.Delete(c, repoInterf) })
+	route.PUT("/employee/:id", func(c *gin.Context) { Controllers.Save(c, repoInterf) })
 
 	return route
 }
